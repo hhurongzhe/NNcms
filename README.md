@@ -1,6 +1,7 @@
 # NNcms
 
 This is a C++ 17 code, which calculates the chiral NN interactions under c.m. partial-wave basis.
+I provide the functions and parameters for N2LO-EMN500 as an example. You can change for your own use of course!
 
 ## Structure
 
