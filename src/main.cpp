@@ -1,56 +1,14 @@
 #include "lib_define.hpp"
 #include "interaction_all.hpp"
 
-// build partial-wave channels before writing matrix elements,
-// each element is {l',l,s,j,t,tz}.
-std::vector<std::vector<int>> build_partial_wave_channels(const NN::NN_configs &configs)
+void write_dat_single_channel(std::vector<int> this_channel, const NN::NN_configs &configs)
 {
-    std::vector<std::vector<int>> temp;
-    for (int tz = -1; tz <= 1; tz = tz + 1)
-    {
-        // j=0 channels: 1S0 and 3P0.
-        std::vector<int> channel_1s0 = {0, 0, 0, 0, 1, tz};
-        temp.push_back(channel_1s0);
-        std::vector<int> channel_3p0 = {1, 1, 1, 0, 1, tz};
-        temp.push_back(channel_3p0);
-        // j>=1 channels.
-        for (int j_temp = 1; j_temp <= configs.J_max; j_temp = j_temp + 1)
-        {
-            for (int s = 0; s <= 1; s = s + 1)
-            {
-                for (int l_bra = j_temp - s; l_bra <= j_temp + s; l_bra = l_bra + 1)
-                {
-                    for (int l_ket = j_temp - s; l_ket <= j_temp + s; l_ket = l_ket + 1)
-                    {
-                        if (abs(l_bra - l_ket) % 2 != 0) // check parity
-                        {
-                            continue;
-                        }
-                        int t = 1 - ((l_bra + s) % 2); // determine t by (-1)^(l+s+t)=odd.
-                        if (t == 0 && tz != 0)         // check isospin
-                        {
-                            continue;
-                        }
-                        std::vector<int> this_channel = {l_bra, l_ket, s, j_temp, t, tz};
-                        temp.push_back(this_channel);
-                    }
-                }
-            }
-        }
-    }
-
-    return temp;
-}
-
-void write_dat_each(std::vector<int> this_channel, const NN::NN_configs &configs)
-{
-    int l_final, l_initial, s, j, t, tz;
+    int l_final, l_initial, s, j, tz;
     l_final = this_channel[0];
     l_initial = this_channel[1];
     s = this_channel[2];
     j = this_channel[3];
-    t = this_channel[4];
-    tz = this_channel[5];
+    tz = this_channel[4];
     std::string tz_name;
     if (tz == -1)
     {
@@ -68,58 +26,105 @@ void write_dat_each(std::vector<int> this_channel, const NN::NN_configs &configs
     {
         tz_name = "???";
     }
-    std::ostringstream oss;
-    oss << configs.result_dir << configs.result_name << "-" << l_final << "-" << l_initial << "-" << s << "-" << j << "-" << t << "-" << tz_name << ".dat";
-    auto file_name_this_channel = oss.str(); // file name for this partial-wave channel.
-    std::cout << "writing: " << file_name_this_channel << std::endl;
-    std::ofstream fp(file_name_this_channel);
-    for (int idx_mom_bra = 0; idx_mom_bra < configs.mesh_points_number; idx_mom_bra = idx_mom_bra + 1)
+
+    if (configs.is_kernel)
     {
-        for (int idx_mom_ket = 0; idx_mom_ket < configs.mesh_points_number; idx_mom_ket = idx_mom_ket + 1)
+        std::ostringstream oss;
+        oss << configs.result_dir << configs.result_name << "-" << l_final << "-" << l_initial << "-" << s << "-" << j << "-" << tz_name << "-kernel.dat";
+        auto file_name_this_channel = oss.str(); // file name for this partial-wave channel.
+        std::cout << "writing: " << file_name_this_channel << std::endl;
+        std::ofstream fp(file_name_this_channel);
+        for (int idx_mom_bra = 0; idx_mom_bra < configs.mesh_points_number; idx_mom_bra = idx_mom_bra + 1)
         {
-            double p_final = configs.momentum_mesh_points[idx_mom_bra];
-            double p_initial = configs.momentum_mesh_points[idx_mom_ket];
-            double v_value = interaction_all::potential_chiral(l_final, l_initial, s, j, tz, p_final, p_initial, configs);
-            fp << std::fixed << " " << std::scientific << std::setprecision(17) << v_value;
+            for (int idx_mom_ket = 0; idx_mom_ket < configs.mesh_points_number; idx_mom_ket = idx_mom_ket + 1)
+            {
+                double p_final = configs.momentum_mesh_points[idx_mom_bra];
+                double p_initial = configs.momentum_mesh_points[idx_mom_ket];
+                double v_value = interaction_all::potential_chiral(l_final, l_initial, s, j, tz, p_final, p_initial, configs);
+                fp << std::fixed << " " << std::scientific << std::setprecision(17) << v_value;
+            }
+            fp << "\n";
         }
-        fp << "\n";
+        fp.close();
     }
-    fp.close();
+    if (configs.is_aside)
+    {
+        std::ostringstream oss;
+        oss << configs.result_dir << configs.result_name << "-" << l_final << "-" << l_initial << "-" << s << "-" << j << "-" << tz_name << "-aside.dat";
+        auto file_name_this_channel = oss.str(); // file name for this partial-wave channel.
+        std::cout << "writing: " << file_name_this_channel << std::endl;
+        std::ofstream fp(file_name_this_channel);
+        for (int idx_tlab = 0; idx_tlab < configs.tlabs.size(); idx_tlab = idx_tlab + 1)
+        {
+            double tlab = configs.tlabs[idx_tlab];
+            double p_final;
+            double p_initial = configs.get_rel_mom(tlab, tz);
+            double v_value;
+            for (int idx_mom_bra = 0; idx_mom_bra < configs.mesh_points_number; idx_mom_bra = idx_mom_bra + 1)
+            {
+                p_final = configs.momentum_mesh_points[idx_mom_bra];
+                v_value = interaction_all::potential_chiral(l_final, l_initial, s, j, tz, p_final, p_initial, configs);
+                fp << std::fixed << " " << std::scientific << std::setprecision(17) << v_value;
+            }
+            p_final = p_initial;
+            v_value = interaction_all::potential_chiral(l_final, l_initial, s, j, tz, p_final, p_initial, configs);
+            fp << std::fixed << " " << std::scientific << std::setprecision(17) << v_value;
+            fp << "\n";
+        }
+        fp.close();
+    }
 }
 
 // write results in the output file.
 void write_dat(const NN::NN_configs &configs)
 {
-    std::ofstream fp(configs.result_file());
-
-    fp << "# momentum mesh points number: " << configs.mesh_points_number << "\n";
-    fp << "! momentum mesh points and weights:\n";
+    // write momentum mesh
+    std::ostringstream oss_mom_mesh;
+    oss_mom_mesh << configs.result_dir << configs.result_name << "-momentum-mesh.dat";
+    auto file_mom_mesh = oss_mom_mesh.str();
+    std::ofstream fp_mom_mesh(file_mom_mesh);
+    fp_mom_mesh << "# momentum mesh points number;\n";
+    fp_mom_mesh << "# momentum mesh points and weights;\n";
+    fp_mom_mesh << configs.mesh_points_number << "\n";
     for (int i = 0; i < configs.momentum_mesh_points.size(); i = i + 1)
     {
-        fp << std::fixed << "\t" << std::scientific << std::setprecision(17) << configs.momentum_mesh_points[i] << "\t" << std::setw(17) << configs.momentum_mesh_weights[i] << std::endl;
+        fp_mom_mesh << std::fixed << "\t" << std::scientific << std::setprecision(17) << configs.momentum_mesh_points[i] << "\t" << std::setw(17) << configs.momentum_mesh_weights[i] << std::endl;
     }
+    fp_mom_mesh.close();
+
+    // write tlabs
+    std::ostringstream oss_tlabs;
+    oss_tlabs << configs.result_dir << configs.result_name << "-tlabs.dat";
+    auto file_tlabs = oss_tlabs.str();
+    std::ofstream fp_tlabs(file_tlabs);
+    fp_tlabs << "# tlabs;\n";
+    for (int i = 0; i < configs.tlabs.size(); i = i + 1)
+    {
+        fp_tlabs << std::fixed << "\t" << std::scientific << std::setprecision(17) << configs.tlabs[i] << std::endl;
+    }
+    fp_tlabs.close();
 
     // generate channels.
-    auto channels = build_partial_wave_channels(configs);
+    auto channels = configs.partial_waves;
     for (int idx_channel = 0; idx_channel < channels.size(); idx_channel = idx_channel + 1)
     {
         // write matrix elements for each channel.
         auto this_channel = channels[idx_channel];
-        write_dat_each(this_channel, configs);
+        write_dat_single_channel(this_channel, configs);
     }
 }
 
 int main()
 {
     // config file initializing.
-    auto ini = inifile_system::inifile("inifile.ini");
+    auto ini = inifile_system::inifile("inifile-cms.ini");
     if (!ini.good())
     {
         std::cerr << ini.error() << std::endl;
         exit(-1);
     }
     auto configs = NN::NN_configs(ini);
-    std::cout << "----output file is written in: " << configs.result_file() << std::endl;
+    std::cout << "----output file is written in: " << configs.result_dir << configs.result_name << "*" << std::endl;
 
     // set parallel threads in openpm.
     if (configs.use_omp)
