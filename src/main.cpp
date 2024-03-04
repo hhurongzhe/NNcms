@@ -88,7 +88,7 @@ void write_dat(const NN::NN_configs &configs)
     fp_mom_mesh << configs.mesh_points_number << "\n";
     for (int i = 0; i < configs.momentum_mesh_points.size(); i = i + 1)
     {
-        fp_mom_mesh << std::fixed << "\t" << std::scientific << std::setprecision(17) << configs.momentum_mesh_points[i] << "\t" << std::setw(17) << configs.momentum_mesh_weights[i] << std::endl;
+        fp_mom_mesh << std::fixed << std::scientific << std::setprecision(17) << configs.momentum_mesh_points[i] << "\t" << std::setw(17) << configs.momentum_mesh_weights[i] << std::endl;
     }
     fp_mom_mesh.close();
 
@@ -100,9 +100,21 @@ void write_dat(const NN::NN_configs &configs)
     fp_tlabs << "# tlabs;\n";
     for (int i = 0; i < configs.tlabs.size(); i = i + 1)
     {
-        fp_tlabs << std::fixed << "\t" << std::scientific << std::setprecision(17) << configs.tlabs[i] << std::endl;
+        fp_tlabs << std::fixed << std::scientific << std::setprecision(17) << configs.tlabs[i] << std::endl;
     }
     fp_tlabs.close();
+
+    // TODO: write partial-waves
+    std::ostringstream oss_pws;
+    oss_pws << configs.result_dir << configs.result_name << "-partial-waves.dat";
+    auto file_pws = oss_pws.str();
+    std::ofstream fp_pws(file_pws);
+    fp_pws << "# partial-waves: l' l s j tz;\n";
+    for (int i = 0; i < configs.partial_waves.size(); i = i + 1)
+    {
+        fp_pws << configs.partial_waves[i][0] << " " << configs.partial_waves[i][1] << " " << configs.partial_waves[i][2] << " " << configs.partial_waves[i][3] << " " << configs.partial_waves[i][4] << "\n";
+    }
+    fp_pws.close();
 
     // generate channels.
     auto channels = configs.partial_waves;
