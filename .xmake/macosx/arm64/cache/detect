@@ -1,9 +1,0 @@
-{
-    ["detect.sdks.find_xcode"] = {
-        xcode = { }
-    },
-    find_program = {
-        ping = "/sbin/ping",
-        git = "/usr/bin/git"
-    }
-}
