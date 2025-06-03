@@ -1,0 +1,14 @@
+{
+    openmp = {
+        envs = {
+            PATH = {
+                [[C:\Users\pku\AppData\Local\.xmake\packages\o\openmp\latest\62b609f2436a4a16b6fc1eb11f9cb005\bin]]
+            }
+        },
+        installdir = [[C:\Users\pku\AppData\Local\.xmake\packages\o\openmp\latest\62b609f2436a4a16b6fc1eb11f9cb005]],
+        cxxflags = "/openmp",
+        __requirestr = "openmp",
+        cflags = "/openmp",
+        __enabled = true
+    }
+}

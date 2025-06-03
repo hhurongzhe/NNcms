@@ -1,0 +1,10 @@
+{
+    cmdlines = {
+        "xmake l /Users/mac/.vscode/extensions/tboox.xmake-vscode-2.4.0/assets/update_intellisense.lua .vscode clangd",
+        "xmake l /Users/mac/.vscode/extensions/tboox.xmake-vscode-2.4.0/assets/explorer.lua",
+        "xmake l /Users/mac/.vscode/extensions/tboox.xmake-vscode-2.4.0/assets/explorer.lua",
+        "xmake l /Users/mac/.vscode/extensions/tboox.xmake-vscode-2.4.0/assets/explorer.lua",
+        "xmake ",
+        "xmake lua /opt/homebrew/Cellar/xmake/2.9.9/share/xmake/modules/private/utils/statistics.lua"
+    }
+}

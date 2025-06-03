@@ -1,0 +1,11 @@
+[
+{
+  "directory": "/Users/mac/Desktop/NN-cms",
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-target", "aarch64-macos-none", "-O3", "-std=c++17", "-Ibuild/.gens/NN-cms/macosx/arm64/platform/windows/idl", "-o", "build/.objs/NN-cms/macosx/arm64/src/main.cpp.o", "src/main.cpp"],
+  "file": "src/main.cpp"
+},
+{
+  "directory": "/Users/mac/Desktop/NN-cms",
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-target", "aarch64-macos-none", "-O3", "-std=c++17", "-Ibuild/.gens/NN-cms/macosx/arm64/platform/windows/idl", "-o", "build/.objs/NN-cms/macosx/arm64/src/gauss_legendre.cpp.o", "src/gauss_legendre.cpp"],
+  "file": "src/gauss_legendre.cpp"
+}]
